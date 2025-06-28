@@ -79,6 +79,12 @@ class ChatPage extends StatelessWidget {
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
+    //is current user
+
+    //align message to the right if sender is the current user, otherwi
+
+    
+
     return Text(data["message"]);
   }
 
