@@ -5,17 +5,23 @@ import 'package:my_chatt_app/components/my_textfield.dart';
 import 'package:my_chatt_app/services/auth/auth_services.dart';
 import 'package:my_chatt_app/services/chat/chat_services.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   final String receiverEmail;
   final String receiverID;
 
   ChatPage({super.key, required this.receiverEmail, required this.receiverID});
 
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
   //text controller
   final TextEditingController _messageContoller = TextEditingController();
 
   //chat & auth services
   final ChatService _chatService = ChatService();
+
   final AuthService _authService = AuthService();
 
   //sendMessage
@@ -23,7 +29,7 @@ class ChatPage extends StatelessWidget {
     //if there something inside the textfield
     if (_messageContoller.text.isNotEmpty) {
       //send the message
-      await _chatService.sendMessage(receiverID, _messageContoller.text);
+      await _chatService.sendMessage(widget.receiverID, _messageContoller.text);
 
       //clear text controller
       _messageContoller.clear();
@@ -35,7 +41,7 @@ class ChatPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          receiverEmail,
+          widget.receiverEmail,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -59,7 +65,7 @@ class ChatPage extends StatelessWidget {
   Widget _buildMessageList() {
     String senderID = _authService.getCurrentUser()!.uid;
     return StreamBuilder(
-      stream: _chatService.getMessages(receiverID, senderID),
+      stream: _chatService.getMessages(widget.receiverID, senderID),
       builder: (context, snapshot) {
         //errors
         if (snapshot.hasError) {
