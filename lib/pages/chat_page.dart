@@ -9,7 +9,10 @@ class ChatPage extends StatefulWidget {
   final String receiverEmail;
   final String receiverID;
 
-  ChatPage({super.key, required this.receiverEmail, required this.receiverID});
+  ChatPage({super.key, 
+  required this.receiverEmail, 
+  required this.receiverID
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -17,23 +20,65 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   //text controller
-  final TextEditingController _messageContoller = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
 
   //chat & auth services
   final ChatService _chatService = ChatService();
-
   final AuthService _authService = AuthService();
+
+  //for textfield focus
+  FocusNode myFocusNode = FocusNode();
+  @override
+  void initState() {
+    super.initState();
+
+    //add listener to focus node
+    myFocusNode.addListener(() {
+      if (myFocusNode.hasFocus) {
+        //cause a delay so that the keyboard has time to show up
+        // then the amount of remaining space will be calculated,
+        //then scroll down
+        Future.delayed(const Duration(milliseconds: 500), 
+        () => scrollDown(),
+        );
+      }
+    });
+
+    //wait a bit for listview to be build, then scroll to botton
+    Future.delayed(const Duration(milliseconds: 500), () => scrollDown());
+  }
+
+  @override
+  void dispose() {
+    myFocusNode.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  //scroll controller
+  final ScrollController _scrollController = ScrollController();
+  void scrollDown() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(seconds: 1),
+      curve: Curves.fastOutSlowIn,
+    );
+  }
 
   //sendMessage
   void sendMessage() async {
     //if there something inside the textfield
-    if (_messageContoller.text.isNotEmpty) {
+    if (_messageController.text.isNotEmpty) {
       //send the message
-      await _chatService.sendMessage(widget.receiverID, _messageContoller.text);
+      await _chatService.sendMessage(
+        widget.receiverID,
+        _messageController.text,
+      );
 
       //clear text controller
-      _messageContoller.clear();
+      _messageController.clear();
     }
+    scrollDown();
   }
 
   @override
@@ -79,6 +124,7 @@ class _ChatPageState extends State<ChatPage> {
 
         //return list view
         return ListView(
+          controller: _scrollController,
           children:
               snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
         );
@@ -118,9 +164,10 @@ class _ChatPageState extends State<ChatPage> {
           //textfield should take up most the space
           Expanded(
             child: MyTextfield(
-              controller: _messageContoller,
+              controller: _messageController,
               hintText: "Type a message",
               obsecureText: false,
+              focusNode: myFocusNode,
             ),
           ),
 
